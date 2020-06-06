@@ -17,7 +17,8 @@ let options = {
 	seed: 42,
 	iterations: 300,
 	frequency: 1,
-	error: 0.001
+	minError: 0.001,
+	showError: false
 };
 let progress = {
 	step: null,
@@ -87,65 +88,79 @@ function plot(data)
 		clusterIDs = data.row_names.map(d => d.split(":")[0]);
 		clusterNames = data.row_names.map(d => d.split(":")[1]);
 		clusterIDsUnique = [...new Set(clusterIDs)];
+		return;
+	}
 
-	// Or if received occasional data update
-	} else {
-		// Do we want to replot the data? i.e. has the error changed enough?
-		let skip = false;
-		if(progress.error != -1 && (
-			Math.abs(data.error - progress.error)/progress.error < options.error ||
-			progress.step % 50 == 0
-		))
-			skip = true;
+	// Otherwise, we received a data update
+	// Do we want to replot the data? i.e. has the error changed enough?
+	let skip = false;
+	if(progress.error != -1 && (
+		Math.abs(data.error - progress.error)/progress.error < options.minError ||
+		progress.step % 50 == 0
+	))
+		skip = true;
 
-		// Update progress
-		progress.message = "";
-		progress.error = data.error;
-		progress.step = data.iter;
-		progress.n = data.N;
-		// Update error values
+	// Update progress
+	progress.message = "";
+	progress.error = data.error;
+	progress.step = data.iter;
+	progress.n = data.N;
+	// Update error values
+	if(options.showError) {
 		errors.x.push(data.iter);
 		errors.y.push(data.error);
-
-		if(skip)
-			return;
-
-		// Extract X and Y coordinates (stores as [x1, y1, x2, y2, ...])
-		let traces = [];
-		let x = data.data.filter((d, k) => { return k % 2 == 0 }),
-			y = data.data.filter((d, k) => { return k % 2 == 1 });
-
-		// Generate traces
-		for(let clusterID of clusterIDsUnique)
-		{
-			let rowIDs = clusterIDs
-				.map((v, k) => v == clusterID ? k : null )
-				.filter(d => d != null);
-
-			traces.push({
-				name: clusterNames[rowIDs[0]],
-				x: x.filter((v, k) => rowIDs.includes(k)),
-				y: y.filter((v, k) => rowIDs.includes(k)),
-				// Displays line graph by default
-				mode: "markers",
-				// Don't show coordinates since they don't mean anything
-				hoverinfo: "name",
-				// Avoid having an ellipsis in the hover text
-				hoverlabel: { namelength: -1 },
-			})
-		}
-
-		// Plotly.react doesn't re-initialize the plot each time it's called
-		Plotly.react(document.getElementById("scatter"), traces, {
-			margin: { t: 0, b: 0, l: 0, r: 0 },
-			hovermode: "closest",
-			xaxis: { ...axisOptions },
-			yaxis: { ...axisOptions },
-			showlegend: true
-		}, {
-			displayModeBar: false
-		});
 	}
+
+	if(skip)
+		return;
+
+	// Extract X and Y coordinates (stores as [x1, y1, x2, y2, ...])
+	let traces = [];
+	let x = data.data.filter((d, k) => { return k % 2 == 0 }),
+		y = data.data.filter((d, k) => { return k % 2 == 1 });
+
+	// Generate traces
+	for(let clusterID of clusterIDsUnique)
+	{
+		let rowIDs = clusterIDs
+			.map((v, k) => v == clusterID ? k : null )
+			.filter(d => d != null);
+
+		traces.push({
+			name: clusterNames[rowIDs[0]],
+			x: x.filter((v, k) => rowIDs.includes(k)),
+			y: y.filter((v, k) => rowIDs.includes(k)),
+			// Displays line graph by default
+			mode: "markers",
+			// Don't show coordinates since they don't mean anything
+			hoverinfo: "name",
+			// Avoid having an ellipsis in the hover text
+			hoverlabel: { namelength: -1 },
+		})
+	}
+
+	// Add error trace as inlet
+	if(options.showError)
+		traces.push({
+			...errors,
+			name: "Error",
+			xaxis: "x2",
+			yaxis: "y2",
+		});
+
+	// Plot tSNE
+	// Plotly.react doesn't re-initialize the plot each time it's called
+	Plotly.react(document.getElementById("scatter"), traces, {
+		margin: { t: 0, b: 0, l: 0, r: 0 },
+		hovermode: "closest",
+		xaxis: { ...axisOptions },
+		yaxis: { ...axisOptions },
+		xaxis2: { ...axisOptions, showgrid: false, domain: [0.7, 1], anchor: "x2" },
+		yaxis2: { ...axisOptions, showgrid: false, domain: [0, 0.3], anchor: "y2" },
+		showlegend: true
+	}, {
+		displayModeBar: false
+	});
 }
 
 
@@ -156,9 +171,10 @@ function plot(data)
 
 <style>
 #scatter {
-	width: 500px;
+	width: 600px;
 	height: 500px;
 }
+
 </style>
 
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
@@ -188,11 +204,11 @@ function plot(data)
 				<h4 class="mb-4">Parameters</h4>
 				<Parameter label="Step Size" type="text" bind:value={options.step} disabled={busy} help="TODO" />
 				<Parameter label="Perplexity" type="text" bind:value={options.perplexity} disabled={busy} help="TODO" />
-				<Parameter label="Iterations" type="text" bind:value={options.iterations} disabled={busy} />
+				<Parameter label="Iterations" type="text" bind:value={options.iterations} disabled={busy} help="Stop algorithm after {options.iterations} iterations" />
 				<Parameter label="Rnd Seed" type="text" bind:value={options.seed} disabled={busy} help="Seed for random number generator for reproducibility. Set to -1 to disable." />
 				<Parameter label="Frequency" type="text" bind:value={options.frequency} disabled={busy} help="How often you'd like the plot to be updated. The lower the number, the more work your computer has to do." />
-				<Parameter label="Min Error" type="text" bind:value={options.error} disabled={busy} help="Minimum error change for plotting" />
-
+				<Parameter label="Min Error" type="text" bind:value={options.minError} disabled={busy} help="Minimum error change for plotting" />
+				<Parameter label="Plot Error" type="checkbox" bind:value={options.showError} disabled={busy} help="Enable to see how the error changes over time" />
 				<hr />
 
 				<button type="button" class="btn btn-primary btn-lg" on:click={run} disabled={busy}>
