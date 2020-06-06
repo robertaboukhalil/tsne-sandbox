@@ -103,6 +103,12 @@ function plot(data)
 		progress.error = data.error;
 		progress.step = data.iter;
 		progress.n = data.N;
+		// Update error values
+		errors.x.push(data.iter);
+		errors.y.push(data.error);
+
+		if(skip)
+			return;
 
 		// Extract X and Y coordinates (stores as [x1, y1, x2, y2, ...])
 		let traces = [];
