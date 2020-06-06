@@ -23,7 +23,7 @@ let options = {
 let progress = {
 	step: null,
 	error: null,
-	message: "Select parameters and click Launch to start"
+	message: "Select parameters and click <code>Launch</code> to start"
 };
 let clusterIDs = [];
 let clusterNames = [];
@@ -206,7 +206,7 @@ function plot(data)
 			</li>
 
 			<li class="nav-item dropdown">
-				<a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">tSNE Resources</a>
+				<a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Resources</a>
 				<div class="dropdown-menu dropdown-menu-right">
 					<a target="_blank" class="dropdown-item" href="https://distill.pub/2016/misread-tsne/">How to Use tSNE Effectively</a>
 					<a target="_blank" class="dropdown-item" href="https://www.oreilly.com/learning/an-illustrated-introduction-to-the-t-sne-algorithm">An illustrated introduction to tSNE</a>
@@ -269,7 +269,7 @@ function plot(data)
 					{/if}
 				</h4>
 				<div id="scatter">
-					{progress.message}
+					{@html progress.message}
 				</div>
 			</div>
 		</div>
