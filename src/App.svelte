@@ -15,7 +15,9 @@ let options = {
 	step: 0.5,
 	perplexity: 50,
 	seed: 42,
-	iterations: 500
+	iterations: 300,
+	frequency: 1,
+	error: 0.001
 };
 let progress = {
 	step: null,
