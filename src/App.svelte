@@ -1,30 +1,66 @@
 <script>
-	export let name;
+import { onMount } from "svelte";
+
+
+// -----------------------------------------------------------------------------
+// Globals
+// -----------------------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------------------
+// Reactive statements
+// -----------------------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------------------
+// On page load
+// -----------------------------------------------------------------------------
+
+onMount(async () => {
+	// Enable jQuery tooltips
+	jQuery("[data-toggle='popover']").popover();
+});
+
+
+// -----------------------------------------------------------------------------
+// HTML
+// -----------------------------------------------------------------------------
 </script>
 
-<main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
+<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+	<a class="navbar-brand" href="/">tSNE Sandbox</a>
+	<div class="collapse navbar-collapse" id="navbarsExampleDefault">
+		<ul class="navbar-nav mr-auto"></ul>
+		<ul class="navbar-nav">
+			<li class="nav-item active">
+				<a class="nav-link" href="https://github.com/robertaboukhalil/tsne-sandbox">Code</a>
+			</li>
+		</ul>
+	</div>
+</nav>
+
+<main role="main">
+	<div class="jumbotron mt-4 pb-3">
+		<div class="container">
+			<p class="lead">Quickly generate data quality reports for FASTQ files. Your data never leaves the browser.</p>
+		</div>
+	</div>
+
+	<div class="container">
+		<div class="row">
+			<!-- Params -->
+			<div class="col-md-4">
+				<h4 class="mb-4">Parameters</h4>
+
+				<h6>Choose FASTQ files to analyze</h6>
+			</div>
+
+			<!-- Data Viz -->
+			<div class="col-md-8">
+				<h4 class="mb-4">tSNE Plot</h4>
+			</div>
+		</div>
+	</div>
 </main>
-
-<style>
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
-	}
-
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
-	}
-
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
-</style>
