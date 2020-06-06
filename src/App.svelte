@@ -1,6 +1,7 @@
 <script>
 import { onMount } from "svelte";
 import { Aioli } from "@biowasm/aioli";
+import Parameter from "./Parameter.svelte";
 
 
 // -----------------------------------------------------------------------------
@@ -8,13 +9,22 @@ import { Aioli } from "@biowasm/aioli";
 // -----------------------------------------------------------------------------
 
 let tSNE = new Aioli("bhtsne/latest");
+let busy = true;
 let data = null;
+let options = {
+	step: 0.5,
+	perplexity: 50,
+	seed: 42,
+	iterations: 500
+};
+let progress = {
+	step: null,
+	error: null,
+	message: ""
+};
 let clusterIDs = [];
 let clusterNames = [];
 let clusterIDsUnique = [];
-let UI = {
-	busy: true
-};
 
 
 // -----------------------------------------------------------------------------
@@ -22,6 +32,7 @@ let UI = {
 // -----------------------------------------------------------------------------
 
 $: plot(data);
+$: console.warn(options);
 
 
 // -----------------------------------------------------------------------------
@@ -31,7 +42,7 @@ $: plot(data);
 onMount(async () => {
 	// Initialize tSNE WebAssembly module
 	tSNE.init().then(d => {
-		UI.busy = false;
+		busy = false;
 		console.log("Loaded");
 	});
 
@@ -46,9 +57,15 @@ onMount(async () => {
 
 async function run()
 {
-	UI.busy = true;
-	await tSNE.exec(`-s 42 -n 500 /bhtsne/pollen2014.snd`, d => data = d);
-	UI.busy = false;
+	busy = true;
+	progress.message = "Calculating...";
+
+	// Launch tSNE analysis and provide callback function that saves intermediate results
+	let params = `-e ${options.step} -p ${options.perplexity} -n ${options.iterations} -s ${options.seed}`;
+	console.log(params);
+	await tSNE.exec(`-d 2 ${params} /bhtsne/pollen2014.snd`, d => data = d);
+
+	busy = false;
 }
 
 function plot(data)
@@ -64,6 +81,11 @@ function plot(data)
 
 	// Or if received occasional data update
 	} else {
+		progress.message = "";
+		progress.error = data.error;
+		progress.step = data.iter;
+		progress.n = data.N;
+
 		// Extract X and Y coordinates (stores as [x1, y1, x2, y2, ...])
 		let traces = [];
 		let x = data.data.filter((d, k) => { return k % 2 == 0 }),
@@ -144,19 +166,40 @@ function plot(data)
 		</div>
 	</div>
 
-	<div class="container"> <!-- mt-4 pt-5 -->
+	<!-- mt-4 pt-5 -->
+	<div class="container">
 		<div class="row">
 			<!-- Params -->
 			<div class="col-md-4">
 				<h4 class="mb-4">Parameters</h4>
+				<Parameter label="Step Size" type="text" bind:value={options.step} help="TODO" />
+				<Parameter label="Perplexity" type="text" bind:value={options.perplexity} />
+				<Parameter label="Iterations" type="text" bind:value={options.iterations} />
+				<Parameter label="Rnd Seed" type="text" bind:value={options.seed} />
 
-				<input type="button" class="btn btn-primary btn-lg" value="Launch tSNE" on:click={run} disabled={UI.busy}>
+				<hr />
+
+				<button type="button" class="btn btn-primary btn-lg" on:click={run} disabled={busy}>
+					{#if busy}
+						<span class="spinner-grow spinner-grow-sm mb-1" role="status" aria-hidden="true"></span>
+					{/if}
+					Launch tSNE
+				</button>
 			</div>
 
 			<!-- Data Viz -->
 			<div class="col-md-8">
-				<h4 class="mb-4">tSNE Plot</h4>
-				<div id="scatter"></div>
+				<h4 class="mb-4">
+					tSNE Plot
+					{#if progress.step != null}
+					<small><small>
+						Step {progress.step} / {options.iterations}
+					</small></small>
+					{/if}
+				</h4>
+				<div id="scatter">
+					{progress.message}
+				</div>
 			</div>
 		</div>
 	</div>
