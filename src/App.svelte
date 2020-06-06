@@ -23,7 +23,7 @@ let options = {
 let progress = {
 	step: null,
 	error: null,
-	message: ""
+	message: "Select parameters and click Launch to start"
 };
 let clusterIDs = [];
 let clusterNames = [];
@@ -145,7 +145,6 @@ function plot(data)
 		traces.push({
 			...errors,
 			name: "Error",
-			mode: "lines",
 			xaxis: "x2",
 			yaxis: "y2",
 		});
@@ -157,7 +156,7 @@ function plot(data)
 			y0: Math.min(...errors.y),
 			x1: Math.max(...errors.x),
 			y1: Math.max(...errors.y),
-			fillcolor: "#d3d3d3", opacity: 0.1, line: { width: 2 }
+			fillcolor: "#0069d9", opacity: 0.1, line: { width: 0 }
 		}];
 	}
 
@@ -193,9 +192,19 @@ function plot(data)
 
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
 	<a class="navbar-brand" href="/">tSNE Sandbox</a>
-	<div class="collapse navbar-collapse" id="navbarsExampleDefault">
+	<div class="collapse navbar-collapse">
 		<ul class="navbar-nav mr-auto"></ul>
 		<ul class="navbar-nav">
+			<li class="nav-item dropdown">
+				<a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">tSNE Resources</a>
+				<div class="dropdown-menu dropdown-menu-right">
+					<a target="_blank" class="dropdown-item" href="https://distill.pub/2016/misread-tsne/">How to Use tSNE Effectively</a>
+					<a target="_blank" class="dropdown-item" href="https://www.oreilly.com/learning/an-illustrated-introduction-to-the-t-sne-algorithm">An illustrated introduction to tSNE</a>
+					<a target="_blank" class="dropdown-item" href="https://lvdmaaten.github.io/publications/papers/JMLR_2008.pdf">Original tSNE paper</a>
+					<a target="_blank" class="dropdown-item" href="https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding">tSNE Wiki page</a>
+				</div>
+			</li>
+
 			<li class="nav-item active">
 				<a class="nav-link" href="https://github.com/robertaboukhalil/tsne-sandbox">Code</a>
 			</li>
@@ -206,7 +215,12 @@ function plot(data)
 <main role="main">
 	<div class="jumbotron mt-2 pb-1">
 		<div class="container">
-			<p class="lead">Abc</p>
+			<p class="lead">tSNE is an algorithm for visualizing high-dimensional data.</p>
+			<p>
+				In this example, our dataset consists of <code>302</code> points that live in <code>122</code> dimensions!
+				Since humans aren't that good at seeing in <code>122</code> dimensions, we use tSNE to reduce the data to 2 dimensions and plot it below.
+				tSNE tries to make the 2D representation preserve the relative distance between points.
+			</p>
 		</div>
 	</div>
 
@@ -226,10 +240,10 @@ function plot(data)
 				<hr />
 
 				<button type="button" class="btn btn-primary btn-lg" on:click={run} disabled={busy}>
+					Launch tSNE
 					{#if busy}
 						<span class="spinner-grow spinner-grow-sm mb-1" role="status" aria-hidden="true"></span>
 					{/if}
-					Launch tSNE
 				</button>
 			</div>
 
