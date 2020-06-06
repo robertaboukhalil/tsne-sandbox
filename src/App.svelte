@@ -140,24 +140,38 @@ function plot(data)
 	}
 
 	// Add error trace as inlet
-	if(options.showError)
+	let shapes = [];
+	if(options.showError) {
 		traces.push({
 			...errors,
 			name: "Error",
+			mode: "lines",
 			xaxis: "x2",
 			yaxis: "y2",
 		});
+
+		// Add border around the inlet
+		shapes = [{
+			type: "rect", xref: "x2", yref: "y2",
+			x0: Math.min(...errors.x),
+			y0: Math.min(...errors.y),
+			x1: Math.max(...errors.x),
+			y1: Math.max(...errors.y),
+			fillcolor: "#d3d3d3", opacity: 0.1, line: { width: 2 }
+		}];
+	}
 
 	// Plot tSNE
 	// Plotly.react doesn't re-initialize the plot each time it's called
 	Plotly.react(document.getElementById("scatter"), traces, {
 		margin: { t: 0, b: 0, l: 0, r: 0 },
 		hovermode: "closest",
+		showlegend: true,
 		xaxis: { ...axisOptions },
 		yaxis: { ...axisOptions },
 		xaxis2: { ...axisOptions, showgrid: false, domain: [0.7, 1], anchor: "x2" },
 		yaxis2: { ...axisOptions, showgrid: false, domain: [0, 0.3], anchor: "y2" },
-		showlegend: true
+		shapes: shapes
 	}, {
 		displayModeBar: false
 	});
