@@ -48,6 +48,7 @@ $: id = `param-${type}-${label}`;
             class="btn btn-sm btn-outline-primary"
             data-toggle="popover"
             data-trigger="hover"
+            data-html="true"
             data-content="{help}">?</button>
         {/if}
     </div>
