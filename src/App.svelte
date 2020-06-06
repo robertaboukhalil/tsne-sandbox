@@ -71,6 +71,9 @@ async function run()
 	busy = true;
 	progress.message = "Calculating...";
 
+	// Reset previous data
+	errors = { x: [], y: [] };
+
 	// Launch tSNE analysis and provide callback function that saves intermediate results
 	let params = `-e ${options.step} -r ${options.frequency} -p ${options.perplexity} -n ${options.iterations} -s ${options.seed}`;
 	await tSNE.exec(`-d 2 ${params} /bhtsne/pollen2014.snd`, d => data = d);
@@ -187,7 +190,6 @@ function plot(data)
 	width: 600px;
 	height: 500px;
 }
-
 </style>
 
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
@@ -200,6 +202,7 @@ function plot(data)
 				<div class="dropdown-menu dropdown-menu-right">
 					<a target="_blank" class="dropdown-item" href="https://distill.pub/2016/misread-tsne/">How to Use tSNE Effectively</a>
 					<a target="_blank" class="dropdown-item" href="https://www.oreilly.com/learning/an-illustrated-introduction-to-the-t-sne-algorithm">An illustrated introduction to tSNE</a>
+					<a target="_blank" class="dropdown-item" href="https://lvdmaaten.github.io/tsne/">Frequently Asked Questions about tSNE</a>
 					<a target="_blank" class="dropdown-item" href="https://lvdmaaten.github.io/publications/papers/JMLR_2008.pdf">Original tSNE paper</a>
 					<a target="_blank" class="dropdown-item" href="https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding">tSNE Wiki page</a>
 				</div>
@@ -224,19 +227,18 @@ function plot(data)
 		</div>
 	</div>
 
-	<!-- mt-4 pt-5 -->
 	<div class="container">
 		<div class="row">
 			<!-- Params -->
-			<div class="col-md-4">
+			<div class="col-md-3">
 				<h4 class="mb-4">Parameters</h4>
-				<Parameter label="Step Size" type="text" bind:value={options.step} disabled={busy} help="TODO" />
-				<Parameter label="Perplexity" type="text" bind:value={options.perplexity} disabled={busy} help="TODO" />
-				<Parameter label="Iterations" type="text" bind:value={options.iterations} disabled={busy} help="Stop algorithm after {options.iterations} iterations" />
+				<Parameter label="Step Size" type="text" bind:value={options.step} disabled={busy} help="Parameter between <code>0</code> and <code>1</code> that determines the approximation level used by tSNE; lower numbers mean less approximations, therefore higher runtime." />
+				<Parameter label="Perplexity" type="text" bind:value={options.perplexity} disabled={busy} help="Parameter between <code>5</code> and <code>50</code> that is an estimate of how many neighbor each data point has." />
+				<Parameter label="Iterations" type="text" bind:value={options.iterations} disabled={busy} help="Stop algorithm after <code>{options.iterations}</code> iterations." />
 				<Parameter label="Rnd Seed" type="text" bind:value={options.seed} disabled={busy} help="Seed for random number generator for reproducibility. Set to -1 to disable." />
-				<Parameter label="Frequency" type="text" bind:value={options.frequency} disabled={busy} help="How often you'd like the plot to be updated. The lower the number, the more work your computer has to do." />
-				<Parameter label="Min Error" type="text" bind:value={options.minError} disabled={busy} help="Minimum error change for plotting" />
-				<Parameter label="Plot Error" type="checkbox" bind:value={options.showError} disabled={busy} help="Enable to see how the error changes over time" />
+				<Parameter label="Frequency" type="text" bind:value={options.frequency} disabled={busy} help="How often you'd like the plot to be updated. The lower the number, the more work your browser has to do." />
+				<Parameter label="Min Error" type="text" bind:value={options.minError} disabled={busy} help="Minimum error change for plotting." />
+				<Parameter label="Plot Error" type="checkbox" bind:value={options.showError} disabled={busy} help="Enable this setting to visualize how the error changes over time." />
 				<hr />
 
 				<button type="button" class="btn btn-primary btn-lg" on:click={run} disabled={busy}>
@@ -248,7 +250,7 @@ function plot(data)
 			</div>
 
 			<!-- Data Viz -->
-			<div class="col-md-8">
+			<div class="col-md-9">
 				<h4 class="mb-4">
 					tSNE Plot
 					{#if progress.step != null}
