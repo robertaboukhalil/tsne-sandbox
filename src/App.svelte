@@ -25,6 +25,15 @@ let progress = {
 let clusterIDs = [];
 let clusterNames = [];
 let clusterIDsUnique = [];
+let errors = { x: [], y: [] };
+
+// Constants
+const axisOptions = {
+	showticklabels: false,
+	showgrid: true,
+	showline: false,
+	zeroline: false
+};
 
 
 // -----------------------------------------------------------------------------
@@ -32,7 +41,6 @@ let clusterIDsUnique = [];
 // -----------------------------------------------------------------------------
 
 $: plot(data);
-$: console.warn(options);
 
 
 // -----------------------------------------------------------------------------
@@ -61,8 +69,7 @@ async function run()
 	progress.message = "Calculating...";
 
 	// Launch tSNE analysis and provide callback function that saves intermediate results
-	let params = `-e ${options.step} -p ${options.perplexity} -n ${options.iterations} -s ${options.seed}`;
-	console.log(params);
+	let params = `-e ${options.step} -r ${options.frequency} -p ${options.perplexity} -n ${options.iterations} -s ${options.seed}`;
 	await tSNE.exec(`-d 2 ${params} /bhtsne/pollen2014.snd`, d => data = d);
 
 	busy = false;
@@ -81,6 +88,15 @@ function plot(data)
 
 	// Or if received occasional data update
 	} else {
+		// Do we want to replot the data? i.e. has the error changed enough?
+		let skip = false;
+		if(progress.error != -1 && (
+			Math.abs(data.error - progress.error)/progress.error < options.error ||
+			progress.step % 50 == 0
+		))
+			skip = true;
+
+		// Update progress
 		progress.message = "";
 		progress.error = data.error;
 		progress.step = data.iter;
@@ -97,7 +113,7 @@ function plot(data)
 			let rowIDs = clusterIDs
 				.map((v, k) => v == clusterID ? k : null )
 				.filter(d => d != null);
-			
+
 			traces.push({
 				name: clusterNames[rowIDs[0]],
 				x: x.filter((v, k) => rowIDs.includes(k)),
@@ -115,18 +131,8 @@ function plot(data)
 		Plotly.react(document.getElementById("scatter"), traces, {
 			margin: { t: 0, b: 0, l: 0, r: 0 },
 			hovermode: "closest",
-			xaxis: {
-				showticklabels: false,
-				showgrid: true,
-				showline: false,
-				zeroline: false
-			},
-			yaxis: {
-				showticklabels: false,
-				showgrid: true,
-				showline: false,
-				zeroline: false
-			},
+			xaxis: { ...axisOptions },
+			yaxis: { ...axisOptions },
 			showlegend: true
 		}, {
 			displayModeBar: false
@@ -172,10 +178,12 @@ function plot(data)
 			<!-- Params -->
 			<div class="col-md-4">
 				<h4 class="mb-4">Parameters</h4>
-				<Parameter label="Step Size" type="text" bind:value={options.step} help="TODO" />
-				<Parameter label="Perplexity" type="text" bind:value={options.perplexity} />
-				<Parameter label="Iterations" type="text" bind:value={options.iterations} />
-				<Parameter label="Rnd Seed" type="text" bind:value={options.seed} />
+				<Parameter label="Step Size" type="text" bind:value={options.step} disabled={busy} help="TODO" />
+				<Parameter label="Perplexity" type="text" bind:value={options.perplexity} disabled={busy} help="TODO" />
+				<Parameter label="Iterations" type="text" bind:value={options.iterations} disabled={busy} />
+				<Parameter label="Rnd Seed" type="text" bind:value={options.seed} disabled={busy} help="Seed for random number generator for reproducibility. Set to -1 to disable." />
+				<Parameter label="Frequency" type="text" bind:value={options.frequency} disabled={busy} help="How often you'd like the plot to be updated. The lower the number, the more work your computer has to do." />
+				<Parameter label="Min Error" type="text" bind:value={options.error} disabled={busy} help="Minimum error change for plotting" />
 
 				<hr />
 
@@ -194,6 +202,7 @@ function plot(data)
 					{#if progress.step != null}
 					<small><small>
 						Step {progress.step} / {options.iterations}
+						&mdash; error = {Math.round(100000 * progress.error) / 100000}
 					</small></small>
 					{/if}
 				</h4>
