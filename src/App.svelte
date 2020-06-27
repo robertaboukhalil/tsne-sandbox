@@ -135,6 +135,7 @@ function plot(data)
 			y: y.filter((v, k) => rowIDs.includes(k)),
 			// Displays line graph by default
 			mode: "markers",
+			type: "scattergl",
 			// Don't show coordinates since they don't mean anything
 			hoverinfo: "name",
 			// Avoid having an ellipsis in the hover text
