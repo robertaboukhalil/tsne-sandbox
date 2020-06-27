@@ -126,10 +126,8 @@ function process(data)
 	progress.step = data.iter;
 	progress.n = data.N;
 	// Update error values
-	if(options.showError) {
-		dataErrors.x.push(data.iter);
-		dataErrors.y.push(data.error);
-	}
+	dataErrors.x.push(data.iter);
+	dataErrors.y.push(data.error);
 
 	// Start plotting if we have enough data
 	if(progress.plotted == 0 && progress.step > 50)
@@ -171,7 +169,11 @@ function process(data)
 	let shapes = [];
 	if(options.showError)
 	{
-		traces.push({ ...dataErrors, name: "Error", xaxis: "x2", yaxis: "y2" });
+		traces.push({
+			x: [...dataErrors.x],
+			y: [...dataErrors.y],
+			name: "Error", xaxis: "x2", yaxis: "y2"
+		});
 
 		// Add border around the inlet
 		shapes = [{
@@ -227,12 +229,12 @@ function plot()
 	}
 
 	// Plot tSNE iteration. Note that Plotly.react doesn't re-initialize the plot each time it's called
-	Plotly.react(document.getElementById("scatter"), dataPlots[progress.plotted], {
-		...plotOptions,
-		shapes: dataInlets[progress.plotted]
-	}, {
-		displayModeBar: false
-	});
+	Plotly.react(
+		document.getElementById("scatter"),
+		dataPlots[progress.plotted],
+		{ ...plotOptions, shapes: dataInlets[progress.plotted] },
+		{ displayModeBar: false }
+	);
 
 	// Plot next iteration after slight delay
 	plotNext(10);
@@ -325,7 +327,7 @@ function plot()
 					{#if progress.plotted > 0}
 					<small><small>
 						Step {progress.plotted} / {options.iterations}
-						&mdash; error = {Math.round(100000 * progress.error) / 100000}
+						&mdash; error = {Math.round(100000 * dataErrors.y[progress.plotted - 2]) / 100000}
 					</small></small>
 					{/if}
 				</h4>
