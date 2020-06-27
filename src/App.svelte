@@ -9,8 +9,29 @@ import Parameter from "./Parameter.svelte";
 // -----------------------------------------------------------------------------
 
 let tSNE = new Aioli("bhtsne/latest");
+
+// Status
 let busy = true;
-let data = null;
+let progress = {
+	step: 0,			// tSNE iteration we have data for
+	error: null,		// tSNE error for iteration `progress.step`
+	plotted: 0,			// tSNE iteration being plotted; progress.plotted always < progress.step
+};
+
+// Labels
+let clusterIDs = [];
+let clusterNames = [];
+let clusterIDsUnique = [];
+
+// Plots
+let dataPlots = [];					// Array of all plots, keyed on iteration number
+let dataInlets = [];				// Array of all inlet plots, keyed on iteration number
+
+// WebWorker data 
+let data = null;					// Latest data received from WebWorker (a single trace)
+let dataErrors = { x: [], y: [] };	// Latest historical errors
+
+// Config
 let options = {
 	step: 0.5,
 	perplexity: 50,
@@ -20,30 +41,28 @@ let options = {
 	minError: 0.001,
 	showError: false
 };
-let progress = {
-	step: null,
-	error: null,
-	message: "Select parameters and click <code>Launch</code> to start"
-};
-let clusterIDs = [];
-let clusterNames = [];
-let clusterIDsUnique = [];
-let errors = { x: [], y: [] };
-
-// Constants
 const axisOptions = {
 	showticklabels: false,
 	showgrid: true,
 	showline: false,
 	zeroline: false
 };
+const plotOptions = {
+	margin: { t: 0, b: 0, l: 0, r: 0 },
+	hovermode: "closest",
+	showlegend: true,
+	xaxis: { ...axisOptions },
+	yaxis: { ...axisOptions },
+	xaxis2: { ...axisOptions, showgrid: false, domain: [0.7, 1], anchor: "x2" },
+	yaxis2: { ...axisOptions, showgrid: false, domain: [0, 0.3], anchor: "y2" },
+}
 
 
 // -----------------------------------------------------------------------------
 // Reactive statements
 // -----------------------------------------------------------------------------
 
-$: plot(data);
+$: process(data);
 
 
 // -----------------------------------------------------------------------------
@@ -66,22 +85,24 @@ onMount(async () => {
 // Launch tSNE
 // -----------------------------------------------------------------------------
 
-async function run()
+function run()
 {
+	// Reset
 	busy = true;
-	progress.message = "Calculating...";
-
-	// Reset previous data
-	errors = { x: [], y: [] };
+	dataErrors = { x: [], y: [] };
+	progress.plotted = 0;
 
 	// Launch tSNE analysis and provide callback function that saves intermediate results
-	let params = `-e ${options.step} -r ${options.frequency} -p ${options.perplexity} -n ${options.iterations} -s ${options.seed}`;
-	await tSNE.exec(`-d 2 ${params} /bhtsne/pollen2014.snd`, d => data = d);
-
-	busy = false;
+	let params = `-e ${options.step} -r ${options.frequency} -p ${options.perplexity} -m 0 -n ${options.iterations} -s ${options.seed}`;
+	tSNE.exec(`-d 2 ${params} /bhtsne/pollen2014.snd`, d => data = d);
 }
 
-function plot(data)
+
+// -----------------------------------------------------------------------------
+// Process data we receive from WebWorker
+// -----------------------------------------------------------------------------
+
+function process(data)
 {
 	if(data == null || !tSNE.ready)
 		return;
@@ -97,27 +118,30 @@ function plot(data)
 	// Otherwise, we received a data update
 	// Do we want to replot the data? i.e. has the error changed enough?
 	let skip = false;
-	if(progress.error != -1 && (
-		Math.abs(data.error - progress.error)/progress.error < options.minError ||
-		progress.step % 50 == 0
-	))
+	if(Math.abs(data.error - progress.error)/progress.error < options.minError)
 		skip = true;
 
 	// Update progress
-	progress.message = "";
 	progress.error = data.error;
 	progress.step = data.iter;
 	progress.n = data.N;
 	// Update error values
 	if(options.showError) {
-		errors.x.push(data.iter);
-		errors.y.push(data.error);
+		dataErrors.x.push(data.iter);
+		dataErrors.y.push(data.error);
 	}
+
+	// Start plotting if we have enough data
+	if(progress.plotted == 0 && progress.step > 50)
+		plot();
 
 	if(skip)
 		return;
 
-	// Extract X and Y coordinates (stores as [x1, y1, x2, y2, ...])
+	console.log(`Step ${data.iter} - error = ${data.error}`);
+
+	// Extract X and Y coordinates (stores as [x1, y1, x2, y2, ...]).
+	// Also convert the x/y coordinates from a typed array to a regular array.
 	let traces = [];
 	let x = data.data.filter((d, k) => { return k % 2 == 0 }),
 		y = data.data.filter((d, k) => { return k % 2 == 1 });
@@ -140,44 +164,78 @@ function plot(data)
 			hoverinfo: "name",
 			// Avoid having an ellipsis in the hover text
 			hoverlabel: { namelength: -1 },
-		})
+		});
 	}
 
 	// Add error trace as inlet
 	let shapes = [];
-	if(options.showError) {
-		traces.push({
-			...errors,
-			name: "Error",
-			xaxis: "x2",
-			yaxis: "y2",
-		});
+	if(options.showError)
+	{
+		traces.push({ ...dataErrors, name: "Error", xaxis: "x2", yaxis: "y2" });
 
 		// Add border around the inlet
 		shapes = [{
 			type: "rect", xref: "x2", yref: "y2",
-			x0: Math.min(...errors.x),
-			y0: Math.min(...errors.y),
-			x1: Math.max(...errors.x),
-			y1: Math.max(...errors.y),
+			x0: Math.min(...dataErrors.x),
+			y0: Math.min(...dataErrors.y),
+			x1: Math.max(...dataErrors.x),
+			y1: Math.max(...dataErrors.y),
 			fillcolor: "#0069d9", opacity: 0.1, line: { width: 0 }
 		}];
 	}
 
-	// Plot tSNE
-	// Plotly.react doesn't re-initialize the plot each time it's called
-	Plotly.react(document.getElementById("scatter"), traces, {
-		margin: { t: 0, b: 0, l: 0, r: 0 },
-		hovermode: "closest",
-		showlegend: true,
-		xaxis: { ...axisOptions },
-		yaxis: { ...axisOptions },
-		xaxis2: { ...axisOptions, showgrid: false, domain: [0.7, 1], anchor: "x2" },
-		yaxis2: { ...axisOptions, showgrid: false, domain: [0, 0.3], anchor: "y2" },
-		shapes: shapes
+	dataPlots[progress.step] = traces;
+	dataInlets[progress.step] = shapes;
+}
+
+
+// -----------------------------------------------------------------------------
+// Plot tSNE iterations. To make the plotting smooth, we don't plot data as we
+// receive it. Although that seems to work in Firefox and Safari, it appears
+// very choppy in Chrome. Separating the data analysis from visualization seems
+// to address that issue and ensures smooth plotting in all browsers.
+// -----------------------------------------------------------------------------
+
+function plotNext(timeout=0)
+{
+	if(timeout == 0)
+		plot();
+	else
+		setTimeout(plot, timeout);
+}
+
+function plot()
+{
+	// Stop when we've plotted the last tSNE iteration
+	if(progress.plotted >= options.iterations) {
+		busy = false;
+		return;
+	}
+
+	// Stay a few steps behind so the calculation can catch up to the plotting
+	if(progress.plotted > (dataPlots.length - 10) && dataPlots.length < (options.iterations - 10)) {
+		plotNext(20);
+		return;
+	}
+
+	// If we don't have data on the next iteration (i.e. % error changed not large enough),
+	// keep going without timeout (plot stays as is)
+	progress.plotted++;
+	if(dataPlots[progress.plotted] == null) {
+		plotNext(0);
+		return;
+	}
+
+	// Plot tSNE iteration. Note that Plotly.react doesn't re-initialize the plot each time it's called
+	Plotly.react(document.getElementById("scatter"), dataPlots[progress.plotted], {
+		...plotOptions,
+		shapes: dataInlets[progress.plotted]
 	}, {
 		displayModeBar: false
 	});
+
+	// Plot next iteration after slight delay
+	plotNext(10);
 }
 
 
@@ -264,14 +322,28 @@ function plot(data)
 			<div class="col-md-9">
 				<h4 class="mb-4">
 					tSNE Plot
-					{#if progress.step != null}
+					{#if progress.plotted > 0}
 					<small><small>
-						Step {progress.step} / {options.iterations}
+						Step {progress.plotted} / {options.iterations}
 						&mdash; error = {Math.round(100000 * progress.error) / 100000}
 					</small></small>
 					{/if}
 				</h4>
-				{@html progress.message}
+
+				{#if busy && progress.plotted == 0}
+					<div class="d-flex justify-content-center">
+						<div class="text-primary spinner-border mt-0" role="status">
+							<span class="sr-only">Loading...</span>
+						</div>
+						<p class="lead ml-2">
+							{#if progress.step > 0}
+								Initializing tSNE...
+							{:else}
+								Loading...
+							{/if}
+						</p>
+					</div>
+				{/if}
 				<div id="scatter"></div>
 			</div>
 		</div>
