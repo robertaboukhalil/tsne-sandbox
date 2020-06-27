@@ -194,6 +194,7 @@ function plot(data)
 </style>
 
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+	<div class="container">
 	<a class="navbar-brand" href="/">tSNE Sandbox</a>
 	<div class="collapse navbar-collapse">
 		<ul class="navbar-nav mr-auto"></ul>
@@ -221,6 +222,7 @@ function plot(data)
 				<a class="nav-link" href="https://github.com/robertaboukhalil/tsne-sandbox">Code</a>
 			</li>
 		</ul>
+	</div>
 	</div>
 </nav>
 
@@ -269,9 +271,8 @@ function plot(data)
 					</small></small>
 					{/if}
 				</h4>
-				<div id="scatter">
-					{@html progress.message}
-				</div>
+				{@html progress.message}
+				<div id="scatter"></div>
 			</div>
 		</div>
 	</div>
