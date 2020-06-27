@@ -198,7 +198,7 @@ function process(data)
 // to address that issue and ensures smooth plotting in all browsers.
 // -----------------------------------------------------------------------------
 
-function plotNext(timeout=0)
+function plotNext(timeout=30)
 {
 	if(timeout == 0)
 		plot();
@@ -208,6 +208,8 @@ function plotNext(timeout=0)
 
 function plot()
 {
+	console.log(`plotted=${progress.plotted}; total=${dataPlots.length}`);
+
 	// Stop when we've plotted the last tSNE iteration
 	if(progress.plotted >= options.iterations) {
 		busy = false;
@@ -216,7 +218,7 @@ function plot()
 
 	// Stay a few steps behind so the calculation can catch up to the plotting
 	if(progress.plotted > (dataPlots.length - 10) && dataPlots.length < (options.iterations - 10)) {
-		plotNext(20);
+		plotNext();
 		return;
 	}
 
@@ -237,7 +239,7 @@ function plot()
 	);
 
 	// Plot next iteration after slight delay
-	plotNext(10);
+	plotNext();
 }
 
 
