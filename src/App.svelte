@@ -254,6 +254,10 @@ function plot()
 // -----------------------------------------------------------------------------
 </script>
 
+<svelte:head>
+	<script src="https://cdn.plot.ly/plotly-1.54.0.min.js" type="text/javascript"></script>
+</svelte:head>
+
 <style>
 #scatter {
 	width: 600px;
