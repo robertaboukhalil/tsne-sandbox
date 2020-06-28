@@ -99,7 +99,7 @@ function run()
 	progress.plotted = 0;
 
 	// Launch tSNE analysis and provide callback function that saves intermediate results
-	let params = `-e ${options.step} -r ${options.frequency} -p ${options.perplexity} -m 0 -n ${options.iterations} -s ${options.seed}`;
+	let params = `-e ${options.step} -r ${options.frequency} -p ${options.perplexity} -n ${options.iterations} -s ${options.seed}`;
 	tSNE.exec(`-d 2 ${params} /bhtsne/pollen2014.snd`, d => data = d);
 }
 
