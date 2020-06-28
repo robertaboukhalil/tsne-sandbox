@@ -1,6 +1,13 @@
 {
   "name": "tsne-sandbox",
   "version": "1.0.0",
+  "description": "Interactive tSNE playground",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/robertaboukhalil/tsne-sandbox"
+  },
+  "author": "Robert Aboukhalil",
+  "license": "MIT",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
