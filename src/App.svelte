@@ -272,7 +272,7 @@ function plot()
 		<ul class="navbar-nav mr-auto"></ul>
 		<ul class="navbar-nav">
 			<li class="nav-item dropdown">
-				<a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Data</a>
+				<button class="btn btn-link nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Data</button>
 				<div class="dropdown-menu dropdown-menu-right">
 					<a target="_blank" class="dropdown-item" href="https://hemberg-lab.github.io/scRNA.seq.datasets/human/tissues/#pollen">Data Source</a>
 					<a target="_blank" class="dropdown-item" href="https://www.nature.com/articles/nbt.2967">Paper describing data</a>
@@ -280,7 +280,7 @@ function plot()
 			</li>
 
 			<li class="nav-item dropdown">
-				<a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Resources</a>
+				<button class="btn btn-link nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Resourcess</button>
 				<div class="dropdown-menu dropdown-menu-right">
 					<a target="_blank" class="dropdown-item" href="https://distill.pub/2016/misread-tsne/">How to Use tSNE Effectively</a>
 					<a target="_blank" class="dropdown-item" href="https://www.oreilly.com/learning/an-illustrated-introduction-to-the-t-sne-algorithm">An illustrated introduction to tSNE</a>
