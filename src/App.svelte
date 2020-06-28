@@ -136,7 +136,7 @@ function process(data)
 	dataErrors.y.push(data.error);
 
 	// Start plotting if we have enough data
-	if(progress.plotted == 0 && progress.step > 50)
+	if(progress.plotted == 0 && progress.step > Math.min(50, Math.round(options.iterations / 2)))
 		plot();
 
 	if(skip)
@@ -351,12 +351,12 @@ function median(values) {
 			<!-- Params -->
 			<div class="col-12 col-md-3">
 				<h4 class="mb-4">Parameters</h4>
-				<Parameter label="Step Size" type="text" bind:value={options.step} disabled={busy} help="Parameter between <code>0</code> and <code>1</code> that determines the approximation level used by tSNE; lower numbers mean less approximations, therefore higher runtime." />
-				<Parameter label="Perplexity" type="text" bind:value={options.perplexity} disabled={busy} help="Parameter between <code>5</code> and <code>50</code> that is an estimate of how many neighbor each data point has." />
-				<Parameter label="Iterations" type="text" bind:value={options.iterations} disabled={busy} help="Stop algorithm after <code>{options.iterations}</code> iterations." />
-				<Parameter label="Rnd Seed" type="text" bind:value={options.seed} disabled={busy} help="Seed for random number generator for reproducibility. Set to -1 to disable." />
-				<Parameter label="Frequency" type="text" bind:value={options.frequency} disabled={busy} help="How often you'd like the plot to be updated. The lower the number, the more work your browser has to do." />
-				<Parameter label="Min Error" type="text" bind:value={options.minError} disabled={busy} help="Minimum error change for plotting." />
+				<Parameter label="Step Size" type="text" on:launch={run} bind:value={options.step} disabled={busy} help="Parameter between <code>0</code> and <code>1</code> that determines the approximation level used by tSNE; lower numbers mean less approximations, therefore higher runtime." />
+				<Parameter label="Perplexity" type="text" on:launch={run} bind:value={options.perplexity} disabled={busy} help="Parameter between <code>5</code> and <code>50</code> that is an estimate of how many neighbor each data point has." />
+				<Parameter label="Iterations" type="text" on:launch={run} bind:value={options.iterations} disabled={busy} help="Stop algorithm after <code>{options.iterations}</code> iterations." />
+				<Parameter label="Rnd Seed" type="text" on:launch={run} bind:value={options.seed} disabled={busy} help="Seed for random number generator for reproducibility. Set to -1 to disable." />
+				<Parameter label="Frequency" type="text" on:launch={run} bind:value={options.frequency} disabled={busy} help="How often you'd like the plot to be updated. The lower the number, the more work your browser has to do." />
+				<Parameter label="Min Error" type="text" on:launch={run} bind:value={options.minError} disabled={busy} help="Minimum error change for plotting." />
 				<Parameter label="Plot Error" type="checkbox" bind:value={options.showError} disabled={busy} help="Enable this setting to visualize how the error changes over time." />
 				<hr />
 
