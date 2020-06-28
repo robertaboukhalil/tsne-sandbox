@@ -57,8 +57,8 @@ const plotOptions = {
 	margin: { t: 0, b: 0, l: 0, r: 0 },
 	hovermode: "closest",
 	showlegend: true,
-	xaxis: { ...axisOptions },
-	yaxis: { ...axisOptions },
+	xaxis: { ...axisOptions, range: [-1.05, 1.05]},
+	yaxis: { ...axisOptions, range: [-1.05, 1.05]},
 	xaxis2: { ...axisOptions, showgrid: false, domain: [0.7, 1], anchor: "x2" },
 	yaxis2: { ...axisOptions, showgrid: false, domain: [0, 0.3], anchor: "y2" },
 }
@@ -236,10 +236,27 @@ function plot()
 		return;
 	}
 
+	// Normalize points such that the median is at (0, 0) with range up to -1 to 1.
+	// This makes the visualization more stable instead of the central cluster flailing around.
+	function normalizeToCenter(points) {
+		let xValues = points.map(d => Array.from(d.x)).flat();
+		let yValues = points.map(d => Array.from(d.y)).flat();
+		let xCenter = median(xValues);
+		let yCenter = median(yValues);
+		let xMaxDistanceFromCenter = Math.max(...xValues.map(x => Math.abs(x - xCenter)));
+		let yMaxDistanceFromCenter = Math.max(...yValues.map(y => Math.abs(y - yCenter)));
+		let normalizedPoints = points.map(group => ({
+				...group,
+				x: group.x.map(val => (val - xCenter) / xMaxDistanceFromCenter),
+				y: group.y.map(val => (val - yCenter) / yMaxDistanceFromCenter)
+		}));
+		return normalizedPoints;
+	}
+
 	// Plot tSNE iteration. Note that Plotly.react doesn't re-initialize the plot each time it's called
 	Plotly.react(
 		document.getElementById("scatter"),
-		dataPlots[progress.plotted],
+		normalizeToCenter(dataPlots[progress.plotted]),
 		{ ...plotOptions, shapes: dataInlets[progress.plotted] },
 		{ displayModeBar: false }
 	);
@@ -248,6 +265,14 @@ function plot()
 	plotNext();
 }
 
+// -----------------------------------------------------------------------------
+// Utilities
+// -----------------------------------------------------------------------------
+function median(values) {
+	let sorted = values.sort((a, b) => a - b);
+	let mid = Math.floor(sorted.length / 2);
+	return values.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+};
 
 // -----------------------------------------------------------------------------
 // HTML

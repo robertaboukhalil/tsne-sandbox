@@ -15,7 +15,7 @@ npm install
 npm run build
 ```
 
-and open the `index.html` file in your browser.
+and open the `public/index.html` file in your browser.
 
 
 ## How it works
