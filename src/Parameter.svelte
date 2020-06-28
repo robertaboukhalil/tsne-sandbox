@@ -1,4 +1,6 @@
 <script>
+import { createEventDispatcher } from "svelte";
+
 export let type = "text";
 export let label = "";
 export let prepend = "";
@@ -7,6 +9,13 @@ export let value = "";
 export let disabled = false;
 export let placeholder = "";
 export let help = "";
+
+// Execute command when press Enter
+let dispatch = createEventDispatcher();
+function handleKeydown(event) {
+	if(event.key == "Enter")
+		dispatch("launch");
+}
 
 $: id = `param-${type}-${label}`;
 </script>
@@ -24,7 +33,7 @@ $: id = `param-${type}-${label}`;
                 </div>
                 {/if}
 
-                <input id={id} type="text" class="form-control form-control-sm" bind:value={value} placeholder={placeholder} disabled={disabled}>
+                <input id={id} type="text" on:keydown={handleKeydown} class="form-control form-control-sm" bind:value={value} placeholder={placeholder} disabled={disabled}>
 
                 {#if append != ""}
                 <div class="input-group-append">
