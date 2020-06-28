@@ -260,15 +260,26 @@ function plot()
 
 <style>
 #scatter {
-	width: 600px;
-	height: 500px;
+	width: 350px;
+	height: 300px;
+}
+
+@media (min-width: 700px) {
+	#scatter {
+		width: 600px;
+		height: 500px;
+	}
 }
 </style>
 
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
 	<div class="container">
 	<a class="navbar-brand" href="/">tSNE Sandbox</a>
-	<div class="collapse navbar-collapse">
+	<button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon"></span>
+	</button>
+
+	<div id="navbar" class="collapse navbar-collapse">
 		<ul class="navbar-nav mr-auto"></ul>
 		<ul class="navbar-nav">
 			<li class="nav-item dropdown">
@@ -299,7 +310,7 @@ function plot()
 </nav>
 
 <main role="main">
-	<div class="jumbotron mt-2 pb-1">
+	<div class="jumbotron mt-5 mt-md-2 pb-1">
 		<div class="container">
 			<p class="lead">tSNE is an algorithm for visualizing high-dimensional data.</p>
 			<p>
@@ -313,7 +324,7 @@ function plot()
 	<div class="container">
 		<div class="row">
 			<!-- Params -->
-			<div class="col-md-3">
+			<div class="col-12 col-md-3">
 				<h4 class="mb-4">Parameters</h4>
 				<Parameter label="Step Size" type="text" bind:value={options.step} disabled={busy} help="Parameter between <code>0</code> and <code>1</code> that determines the approximation level used by tSNE; lower numbers mean less approximations, therefore higher runtime." />
 				<Parameter label="Perplexity" type="text" bind:value={options.perplexity} disabled={busy} help="Parameter between <code>5</code> and <code>50</code> that is an estimate of how many neighbor each data point has." />
@@ -333,13 +344,13 @@ function plot()
 			</div>
 
 			<!-- Data Viz -->
-			<div class="col-md-9">
+			<div class="col-12 col-md-9 mt-4 mt-md-0">
 				<h4 class="mb-4">
 					tSNE Plot
 					{#if progress.plotted > 0}
 					<small><small>
 						Step {progress.plotted} / {options.iterations}
-						&mdash; error = {Math.round(100000 * dataErrors.y[progress.plotted - 2]) / 100000}
+						&mdash; error = {Math.round(10000 * dataErrors.y[progress.plotted - 2]) / 10000}
 					</small></small>
 					{/if}
 				</h4>
