@@ -136,7 +136,7 @@ function process(data)
 	dataErrors.y.push(data.error);
 
 	// Start plotting if we have enough data
-	if(progress.plotted == 0 && progress.step > 50)
+	if(progress.plotted == 0 && progress.step > Math.min(50, Math.round(options.iterations / 2)))
 		plot();
 
 	if(skip)
