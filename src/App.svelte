@@ -291,7 +291,7 @@ function plot()
 			</li>
 
 			<li class="nav-item dropdown">
-				<button class="btn btn-link nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Resourcess</button>
+				<button class="btn btn-link nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Resources</button>
 				<div class="dropdown-menu dropdown-menu-right">
 					<a target="_blank" class="dropdown-item" href="https://distill.pub/2016/misread-tsne/">How to Use tSNE Effectively</a>
 					<a target="_blank" class="dropdown-item" href="https://www.oreilly.com/learning/an-illustrated-introduction-to-the-t-sne-algorithm">An illustrated introduction to tSNE</a>
