@@ -13,9 +13,9 @@ $: id = `param-${type}-${label}`;
 
 
 <div class="form-group row mb-0">
-    <label class="col-sm-6 col-form-label" for={id}>{label}</label>
+    <label class="col-6 col-form-label" for={id}>{label}</label>
 
-    <div class="col-sm-4 p-0">
+    <div class="col-4 p-0">
         {#if type == "text"}
             <div class="input-group input-group-sm">
                 {#if prepend != ""}
@@ -41,7 +41,7 @@ $: id = `param-${type}-${label}`;
         {/if}
     </div>
 
-    <div class="col-sm-1 p-0 pl-3">
+    <div class="col-1 p-0 pl-3">
         {#if help != ""}
         <button
             type="button"
