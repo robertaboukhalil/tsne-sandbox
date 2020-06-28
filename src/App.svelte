@@ -31,7 +31,7 @@ let clusterIDsUnique = [];
 
 // Plots
 let dataPlots = [];					// Array of all plots, keyed on iteration number
-let dataInlets = [];				// Array of all inlet plots, keyed on iteration number
+let dataErrorPlots = [];		// Array of all error plots, keyed on iteration number
 
 // WebWorker data 
 let data = null;					// Latest data received from WebWorker (a single trace)
@@ -45,7 +45,7 @@ let options = {
 	iterations: 300,
 	frequency: 1,
 	minError: 0.001,
-	showError: false
+	showError: true
 };
 const axisOptions = {
 	showticklabels: false,
@@ -57,11 +57,18 @@ const plotOptions = {
 	margin: { t: 0, b: 0, l: 0, r: 0 },
 	hovermode: "closest",
 	showlegend: true,
-	xaxis: { ...axisOptions },
-	yaxis: { ...axisOptions },
-	xaxis2: { ...axisOptions, showgrid: false, domain: [0.7, 1], anchor: "x2" },
-	yaxis2: { ...axisOptions, showgrid: false, domain: [0, 0.3], anchor: "y2" },
-}
+	xaxis: { ...axisOptions, range: [-1.05, 1.05]},
+	yaxis: { ...axisOptions, range: [-1.05, 1.05]},
+	xaxis2: { ...axisOptions, showgrid: false, domain: [0.75, 1], anchor: "x2" },
+	yaxis2: { ...axisOptions, showgrid: false, domain: [0, 0.25], anchor: "y2" },
+	// Background for inset plot
+	shapes: [{
+		type: "rect", xref: "x", yref: "y",
+		x0: 0.5, x1: 1.05,
+		y0: -0.5, y1: -1.05,
+		fillcolor: "#000000", opacity: 0.05, line: { width: 0 }
+	}]
+};
 
 
 // -----------------------------------------------------------------------------
@@ -172,28 +179,18 @@ function process(data)
 	}
 
 	// Add error trace as inlet
-	let shapes = [];
+	let errorTraces = [];
 	if(options.showError)
 	{
-		traces.push({
+		errorTraces.push({
 			x: [...dataErrors.x],
 			y: [...dataErrors.y],
 			name: "Error", xaxis: "x2", yaxis: "y2"
 		});
-
-		// Add border around the inlet
-		shapes = [{
-			type: "rect", xref: "x2", yref: "y2",
-			x0: Math.min(...dataErrors.x),
-			y0: Math.min(...dataErrors.y),
-			x1: Math.max(...dataErrors.x),
-			y1: Math.max(...dataErrors.y),
-			fillcolor: "#0069d9", opacity: 0.1, line: { width: 0 }
-		}];
 	}
 
 	dataPlots[progress.step] = traces;
-	dataInlets[progress.step] = shapes;
+	dataErrorPlots[progress.step] = errorTraces;
 }
 
 
@@ -236,11 +233,28 @@ function plot()
 		return;
 	}
 
+	// Normalize points such that the median is at (0, 0) with range up to -1 to 1.
+	// This makes the visualization more stable instead of the central cluster flailing around.
+	function normalizeToCenter(points) {
+		let xValues = points.map(d => Array.from(d.x)).flat();
+		let yValues = points.map(d => Array.from(d.y)).flat();
+		let xCenter = median(xValues);
+		let yCenter = median(yValues);
+		let xMaxDistanceFromCenter = Math.max(...xValues.map(x => Math.abs(x - xCenter)));
+		let yMaxDistanceFromCenter = Math.max(...yValues.map(y => Math.abs(y - yCenter)));
+		let normalizedPoints = points.map(group => ({
+				...group,
+				x: group.x.map(val => (val - xCenter) / xMaxDistanceFromCenter),
+				y: group.y.map(val => (val - yCenter) / yMaxDistanceFromCenter)
+		}));
+		return normalizedPoints;
+	}
+
 	// Plot tSNE iteration. Note that Plotly.react doesn't re-initialize the plot each time it's called
 	Plotly.react(
 		document.getElementById("scatter"),
-		dataPlots[progress.plotted],
-		{ ...plotOptions, shapes: dataInlets[progress.plotted] },
+		[...normalizeToCenter(dataPlots[progress.plotted]), ...dataErrorPlots[progress.plotted]],
+		plotOptions,
 		{ displayModeBar: false }
 	);
 
@@ -248,6 +262,14 @@ function plot()
 	plotNext();
 }
 
+// -----------------------------------------------------------------------------
+// Utilities
+// -----------------------------------------------------------------------------
+function median(values) {
+	let sorted = values.sort((a, b) => a - b);
+	let mid = Math.floor(sorted.length / 2);
+	return values.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+};
 
 // -----------------------------------------------------------------------------
 // HTML
