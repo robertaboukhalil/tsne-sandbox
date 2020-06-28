@@ -3,6 +3,12 @@ import { onMount } from "svelte";
 import { Aioli } from "@biowasm/aioli";
 import Parameter from "./Parameter.svelte";
 
+// Bootstrap
+import popper from "popper.js";
+import jQuery from "jquery";
+import Bootstrap from "bootstrap";
+import "bootstrap/dist/css/bootstrap.min.css";
+
 
 // -----------------------------------------------------------------------------
 // Globals
