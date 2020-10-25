@@ -14,7 +14,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 // Globals
 // -----------------------------------------------------------------------------
 
-let tSNE = new Aioli("bhtsne/latest");
+let tSNE = new Aioli("bhtsne/t-sne/2016.08.22");
 
 // Status
 let busy = true;
