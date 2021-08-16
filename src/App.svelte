@@ -1,6 +1,6 @@
 <script>
 import { onMount } from "svelte";
-import { Aioli } from "@biowasm/aioli";
+import Aioli from "@biowasm/aioli";
 import Parameter from "./Parameter.svelte";
 
 // Bootstrap
@@ -14,7 +14,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 // Globals
 // -----------------------------------------------------------------------------
 
-let tSNE = new Aioli("bhtsne/t-sne/2016.08.22");
+let CLI;
 
 // Status
 let busy = true;
@@ -84,10 +84,13 @@ $: process(data);
 
 onMount(async () => {
 	// Initialize tSNE WebAssembly module
-	tSNE.init().then(d => {
-		busy = false;
-		console.log("Loaded");
+	CLI = await new Aioli("bhtsne/2016.08.22", {
+		callback: d => {
+			data = d;
+		}
 	});
+	busy = false;
+	console.log("Loaded");
 
 	// Enable jQuery tooltips
 	jQuery("[data-toggle='popover']").popover();
@@ -98,7 +101,7 @@ onMount(async () => {
 // Launch tSNE
 // -----------------------------------------------------------------------------
 
-function run()
+async function run()
 {
 	// Reset
 	busy = true;
@@ -107,7 +110,7 @@ function run()
 
 	// Launch tSNE analysis and provide callback function that saves intermediate results
 	let params = `-e ${options.step} -r ${options.frequency} -p ${options.perplexity} -n ${options.iterations} -s ${options.seed}`;
-	tSNE.exec(`-d 2 ${params} /bhtsne/pollen2014.snd`, d => data = d);
+	await CLI.exec(`bhtsne -d 2 ${params} /bhtsne/pollen2014.snd`);
 }
 
 
@@ -117,7 +120,7 @@ function run()
 
 function process(data)
 {
-	if(data == null || !tSNE.ready)
+	if(data == null)
 		return;
 
 	// If got row names from WebWorker
