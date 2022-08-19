@@ -334,7 +334,7 @@ function median(values) {
 	</div>
 </nav>
 
-<main role="main">
+<main>
 	<div class="jumbotron mt-5 mt-md-2 pb-1">
 		<div class="container">
 			<p class="lead">tSNE is an algorithm for visualizing high-dimensional data.</p>
